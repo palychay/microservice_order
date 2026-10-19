@@ -1,5 +1,7 @@
 from contextlib import asynccontextmanager
 
+from app.rabbitmq import connect_rabbitmq, start_payments_consume
+
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, status
 
@@ -14,7 +16,15 @@ from app.dependencies import get_order_service
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(bind=engine)
-    yield
+
+    connection = await connect_rabbitmq()
+
+    try:
+        await start_payments_consume(connection)
+        yield
+    finally:
+        await connection.close()
+        engine.dispose()
 
 
 app = FastAPI(lifespan=lifespan)

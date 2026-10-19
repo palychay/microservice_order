@@ -1,4 +1,5 @@
 from typing import Any
+
 import httpx
 from fastapi import HTTPException, status
 
@@ -9,7 +10,10 @@ def _upstream_error(response: httpx.Response) -> HTTPException:
     except ValueError:
         detail = response.text or response.reason_phrase
 
-    return HTTPException(status_code=response.status_code, detail=detail)
+    return HTTPException(
+        status_code=response.status_code,
+        detail=detail,
+    )
 
 
 async def request_service(
@@ -18,7 +22,10 @@ async def request_service(
     json_body: Any | None = None,
     headers: dict | None = None,
 ):
-    async with httpx.AsyncClient(trust_env=False) as client:
+    async with httpx.AsyncClient(
+        timeout=20.0,
+        trust_env=False,
+    ) as client:
         try:
             response = await client.request(
                 method,
@@ -26,10 +33,10 @@ async def request_service(
                 json=json_body,
                 headers=headers,
             )
-        except httpx.RequestError as e:
+        except httpx.RequestError:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"{e.request.url}",
+                detail="Не удалось получить ответ внутреннего сервиса",
             )
 
     if response.status_code >= 400:

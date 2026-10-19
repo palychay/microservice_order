@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from .models import Order, OrderItem
 from .config import NotFoundError
 from .schemas import OrderCreateSchema, OrderReadSchema
-from .api_clients import CatalogClient
+from .api_clients import CatalogClient, PaymentClient
 
 
 class OrderService:
@@ -12,9 +12,11 @@ class OrderService:
         self,
         session: Session,
         catalog_client: CatalogClient,
+        payment_client: PaymentClient,
     ):
         self.session = session
         self.catalog_client = catalog_client
+        self.payment_client = payment_client
 
     def create(self, order_data: OrderCreateSchema) -> OrderReadSchema:
         products = []
@@ -49,6 +51,11 @@ class OrderService:
         ]
 
         self.session.commit()
+
+        self.payment_client.create_payment(
+            order_id=order.id,
+            amount=total_amount,
+        )
 
         return OrderReadSchema.model_validate(order)
 

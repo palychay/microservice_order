@@ -1,0 +1,5 @@
+-r catalog-service/requirements.txt
+-r auth-service/requirements.txt
+-r api-gateway/requirements.txt
+-r order-service/requirements.txt
+-r payment-service/requirements.txt
