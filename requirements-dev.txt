@@ -3,3 +3,4 @@
 -r api-gateway/requirements.txt
 -r order-service/requirements.txt
 -r payment-service/requirements.txt
+-r analytic-service/requirements.txt
